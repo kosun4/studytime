@@ -1,225 +1,98 @@
 :root {
-    /* ガラスの透明感を引き立てるカラーパレット */
-    --glass: rgba(255, 255, 255, 0.4);
-    --glass-heavy: rgba(255, 255, 255, 0.7);
-    --border: rgba(255, 255, 255, 0.5);
-    --accent: #007aff; /* iOS風の鮮やかなブルー */
-    --text-main: #1d1d1f;
-    --text-sub: #6e6e73;
-    --bg-base: #f5f5f7;
-    --shadow: rgba(0, 0, 0, 0.05);
+    --space-dark: #0a0e17;
+    --space-light: #1a2a44;
+    --star-gold: #ffeb3b;
+    --star-white: #ffffff;
+    --accent: #4fc3f7;
+    --glass: rgba(255, 255, 255, 0.1);
+    --border: rgba(255, 255, 255, 0.2);
 }
 
 body {
     margin: 0;
-    background: var(--bg-base);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: var(--text-main);
+    background-color: var(--space-dark);
+    font-family: 'Hiragino Mincho ProN', 'serif';
+    color: var(--star-white);
     height: 100vh;
     overflow: hidden;
-    -webkit-font-smoothing: antialiased;
 }
 
-/* 背景のアニメーションオーブ */
-.glass-bg {
+/* 星空の背景アニメーション */
+.starry-sky {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     z-index: -1;
-    background: linear-gradient(135deg, #f5f5f7 0%, #e2e2e7 100%);
-    overflow: hidden;
+    background: radial-gradient(circle at center, var(--space-light) 0%, var(--space-dark) 100%);
 }
 
-.circle {
-    position: absolute;
+.stars {
+    position: absolute; width: 100%; height: 100%;
+    background-image: radial-gradient(1px 1px at 20px 30px, white, rgba(0,0,0,0)),
+                      radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                      radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0));
+    background-size: 200px 200px;
+    opacity: 0.5;
+}
+
+/* 三日月タイマー */
+.moon-timer {
+    width: 280px; height: 280px;
+    margin: 60px auto;
+    background: transparent;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.6;
-    animation: float 20s infinite alternate ease-in-out;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px; font-weight: 100;
+    letter-spacing: 2px;
+    box-shadow: -15px 15px 0 0 var(--star-gold); /* 三日月風 */
+    text-shadow: 0 0 20px var(--star-gold);
 }
 
-.c1 {
-    width: 400px;
-    height: 400px;
-    background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-    top: -100px;
-    left: -100px;
-}
-
-.c2 {
-    width: 500px;
-    height: 500px;
-    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-    bottom: -150px;
-    right: -150px;
-    animation-duration: 25s;
-}
-
-@keyframes float {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to { transform: translate(80px, 100px) rotate(15deg); }
-}
-
-/* メインレイアウト */
-.page {
-    display: none;
-    padding: 60px 24px 140px;
-    height: 100vh;
-    overflow-y: auto;
-    box-sizing: border-box;
-    mask-image: linear-gradient(to bottom, transparent, black 50px, black calc(100% - 100px), transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 50px, black calc(100% - 100px), transparent);
-}
-
-.page.active {
-    display: block;
-    animation: pageIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-@keyframes pageIn {
-    from { opacity: 0; transform: scale(0.98) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* タイマーオーブ (メインの大きなガラス) */
-.timer-orb {
-    width: 280px;
-    height: 280px;
-    margin: 40px auto;
+/* カードデザイン */
+.star-card {
     background: var(--glass);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 58px;
-    font-weight: 200;
-    font-variant-numeric: tabular-nums;
-    box-shadow: 
-        0 20px 40px var(--shadow),
-        inset 0 0 20px rgba(255,255,255,0.3);
-    color: var(--text-main);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    text-align: center;
 }
 
-/* ガラスのカード */
-.glass-card {
-    background: var(--glass);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 30px var(--shadow);
-    transition: transform 0.3s ease;
-}
+.star-card span { font-size: 12px; color: var(--accent); }
+.star-card p { font-size: 32px; margin: 5px 0; color: var(--star-white); font-weight: 200; }
 
-.glass-card:active {
-    transform: scale(0.98);
-}
-
-.glass-card span {
-    font-size: 13px;
-    color: var(--text-sub);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.glass-card p {
-    font-size: 38px;
-    font-weight: 700;
-    margin: 8px 0 0;
-    color: var(--accent);
-    letter-spacing: -1px;
-}
-
-/* ボタンのデザイン */
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-top: 40px;
-}
-
+/* ボタン */
+.controls { display: flex; justify-content: center; gap: 20px; }
 .btn {
-    width: 84px;
-    height: 84px;
-    border-radius: 50%;
+    background: var(--glass);
     border: 1px solid var(--border);
-    background: var(--glass-heavy);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 15px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 8px 20px var(--shadow);
-}
-
-.btn:hover { background: white; transform: translateY(-2px); }
-.btn:active { transform: scale(0.9); box-shadow: 0 4px 10px var(--shadow); }
-
-.btn-start { color: #28cd41; }
-.btn-stop { color: #ff3b30; }
-.btn-reset { color: var(--text-sub); }
-
-/* ログの削除ボタン */
-.btn-del {
-    background: rgba(255, 59, 48, 0.12);
-    color: #ff3b30;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 14px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.btn-del:hover { background: rgba(255, 59, 48, 0.2); }
-
-/* ドック型ナビゲーション */
-.dock {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 60px);
-    max-width: 400px;
-    height: 72px;
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border-radius: 36px;
-    border: 1px solid var(--border);
-    display: flex;
-    padding: 0 10px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-}
-
-.dock-item {
-    flex: 1;
-    border: none;
-    background: none;
-    color: var(--text-sub);
-    font-size: 12px;
-    font-weight: 700;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 30px;
     cursor: pointer;
     transition: 0.3s;
-    border-radius: 28px;
-    margin: 6px 2px;
 }
 
-.dock-item.active {
-    background: white;
-    color: var(--accent);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+.btn:active { transform: scale(0.9); }
+.btn-start { border-color: var(--accent); color: var(--accent); }
+.btn-stop { border-color: #ff5252; color: #ff5252; }
+
+/* ナビゲーション */
+.starlight-nav {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    display: flex; background: rgba(0, 0, 0, 0.4);
+    border-radius: 40px; padding: 5px; border: 1px solid var(--border);
 }
 
-/* スクロールバー非表示 */
-::-webkit-scrollbar { display: none; }
+.nav-item {
+    background: none; border: none; color: #888;
+    padding: 10px 25px; cursor: pointer; border-radius: 30px;
+}
+
+.nav-item.active { color: var(--star-gold); background: var(--glass); }
+
+.page { display: none; padding: 40px 20px; height: 100vh; box-sizing: border-box; overflow-y: auto; }
+.page.active { display: block; animation: fadeIn 1s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.btn-del { background: none; border: 1px solid #ff5252; color: #ff5252; border-radius: 5px; cursor: pointer; font-size: 10px; }
