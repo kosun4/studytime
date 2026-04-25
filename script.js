@@ -1,4 +1,3 @@
-// ★あなたのGAS URLに貼り替えてください
 const URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
 
 let startTime, timerInterval, elapsedTime = 0;
@@ -9,7 +8,6 @@ async function showPage(id) {
     document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     document.getElementById(id.replace('page', 'nav')).classList.add('active');
-    
     if (id !== 'page-timer') await fetchAndProcessData();
 }
 
@@ -38,9 +36,17 @@ async function stopTimer() {
     timerDisplay.textContent = "00:00:00";
 
     try {
-        await fetch(URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "add", duration: finalTime }) });
-        alert("保存完了");
-    } catch (e) { alert("保存に失敗しました"); }
+        // 保存リクエスト
+        await fetch(URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "add", duration: finalTime })
+        });
+        alert("保存完了！");
+    } catch (e) {
+        alert("保存に失敗しました");
+    }
 }
 
 function resetTimer() {
@@ -66,7 +72,6 @@ async function fetchAndProcessData() {
         logList.innerHTML = "";
         rawLogs.reverse().forEach(log => {
             let sec = 0;
-            // 1899年バグ対策
             if (typeof log.duration === 'string' && log.duration.includes(':')) {
                 const p = log.duration.split(':');
                 sec = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
@@ -82,15 +87,17 @@ async function fetchAndProcessData() {
 
             const div = document.createElement('div');
             div.className = 'log-card';
-            div.innerHTML = `<div><small>${lDate.toLocaleString()}</small><div><b>${formatTime(sec)}</b></div></div>
-                             <button onclick="deleteLog('${log.id}')" class="del-btn">削除</button>`;
+            div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><small>${lDate.toLocaleString()}</small><div><b>${formatTime(sec)}</b></div></div>
+                <button onclick="deleteLog('${log.id}')" class="tab-item" style="color:#ff3b30; flex:none;">削除</button>
+            </div>`;
             logList.appendChild(div);
         });
 
         document.getElementById('statToday').textContent = formatTime(today);
         document.getElementById('statMonth').textContent = formatTime(month);
         document.getElementById('statTotal').textContent = formatTime(total);
-    } catch (e) { logList.innerHTML = "データが取得できませんでした"; }
+    } catch (e) { logList.innerHTML = "データの取得に失敗しました"; }
 }
 
 async function deleteLog(id) {
