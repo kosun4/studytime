@@ -3,51 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Study App Pro</title>
+    <title>Study App Glass</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="bg-gradient"></div>
+    <div class="bg-blur"></div>
 
     <main id="app">
         <section id="page-timer" class="page active">
             <div class="glass-timer">
                 <div id="timerDisplay">00:00:00</div>
             </div>
-            <div class="main-controls">
-                <button id="startButton" class="apple-btn start">開始</button>
-                <button id="stopButton" class="apple-btn stop">終了</button>
+            
+            <div class="glass-controls">
+                <button id="startButton" class="glass-btn primary">開始</button>
+                <button id="resetButton" class="glass-btn secondary">リセット</button>
+                <button id="stopButton" class="glass-btn danger">終了</button>
             </div>
-            <button id="resetButton" class="text-link">保存せずにリセット</button>
         </section>
 
         <section id="page-stats" class="page">
-            <h2 class="page-title">学習統計</h2>
-            <div class="stat-card glass">
-                <span>今日の合計</span>
-                <p id="statToday">00:00:00</p>
-            </div>
-            <div class="stat-card glass">
-                <span>総合計</span>
-                <p id="statTotal">00:00:00</p>
-            </div>
+            <h2 class="title">学習統計</h2>
+            <div class="stat-card glass"><span>今日の合計</span><p id="statToday">00:00:00</p></div>
+            <div class="stat-card glass"><span>今月の合計</span><p id="statMonth">00:00:00</p></div>
+            <div class="stat-card glass"><span>総合計</span><p id="statTotal">00:00:00</p></div>
         </section>
 
         <section id="page-log" class="page">
-            <h2 class="page-title">学習ログ</h2>
+            <h2 class="title">学習ログ</h2>
             <div id="logList" class="log-container"></div>
         </section>
     </main>
 
-    <nav class="tab-bar">
+    <nav class="apple-nav">
         <button onclick="showPage('page-timer')">計測</button>
         <button onclick="showPage('page-stats')">統計</button>
         <button onclick="showPage('page-log')">ログ</button>
     </nav>
-<div class="stat-card glass">
-    <span>今月の合計</span>
-    <p id="statMonth">00:00:00</p>
-</div>
+
     <script src="script.js"></script>
 </body>
 </html>
