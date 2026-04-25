@@ -1,4 +1,4 @@
-const URL = "あなたのGASのURL"; // ★ここに新しいURLを必ず貼ってください！
+const URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec"; // ★ここに新しいURLを必ず貼ってください！
 
 let startTime, timerInterval, elapsedTime = 0;
 const timerDisplay = document.getElementById('timerDisplay');
