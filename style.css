@@ -129,3 +129,20 @@ async function deleteLog(id) {
         alert("削除に失敗しました");
     }
 }
+/* 削除ボタンの統一スタイル */
+.btn-del {
+    background: rgba(255, 59, 48, 0.1);
+    color: #ff3b30;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn-del:active { transform: scale(0.9); }
+
+/* 統計数値の強調 */
+#statToday, #statMonth, #statTotal {
+    font-variant-numeric: tabular-nums;
+}
