@@ -1,110 +1,98 @@
-const URL = "あなたのGASのURL"; // ★必ず最新のURLに書き換えてください
+const URL = "あなたのGASのURL"; // ★ここに自分のURLを貼ってください
 
 let startTime, timerInterval, elapsedTime = 0;
 const timerDisplay = document.getElementById('timerDisplay');
 
-// 画面切り替え時に自動更新
 async function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    if (id === 'page-stats' || id === 'page-log') {
-        await fetchAndProcessData();
-    }
+    if (id !== 'page-timer') await fetchAndProcessData();
 }
 
-// データを読み込んで「日ごと」「月ごと」に集計
-async function fetchAndProcessData() {
-    const logList = document.getElementById('logList');
-    if(logList) logList.innerHTML = "<p>同期中...</p>";
-
-    try {
-        const response = await fetch(URL);
-        const rawLogs = await response.json();
-
-        let totalSeconds = 0;
-        let todaySeconds = 0;
-        let monthSeconds = 0;
-        
-        const now = new Date();
-        const todayStr = now.toLocaleDateString();
-        const monthStr = now.getFullYear() + "/" + (now.getMonth() + 1);
-
-        const logsHtml = [];
-
-        rawLogs.reverse().forEach(log => {
-            const logDate = new Date(log.timestamp);
-            const lDateStr = logDate.toLocaleDateString();
-            const lMonthStr = logDate.getFullYear() + "/" + (logDate.getMonth() + 1);
-            
-            const sec = timeToSeconds(log.duration);
-            totalSeconds += sec;
-            
-            if (lDateStr === todayStr) todaySeconds += sec;
-            if (lMonthStr === monthStr) monthSeconds += sec;
-
-            // ログのHTML作成
-            logsHtml.push(`
-                <div class="log-card">
-                    <div>
-                        <small>${logDate.toLocaleString()}</small>
-                        <div style="font-size:18px; font-weight:600;">${log.duration}</div>
-                    </div>
-                    <button onclick="deleteLog('${log.id}')" class="del-btn">削除</button>
-                </div>
-            `);
-        });
-
-        // 統計の表示更新
-        document.getElementById('statToday').textContent = secondsToTime(todaySeconds);
-        document.getElementById('statTotal').textContent = secondsToTime(totalSeconds);
-        // 月間合計を表示したい場合はここに追加
-        if(document.getElementById('statMonth')) {
-            document.getElementById('statMonth').textContent = secondsToTime(monthSeconds);
-        }
-
-        if(logList) logList.innerHTML = logsHtml.join('');
-
-    } catch (e) {
-        console.error("読み込みエラー:", e);
-    }
-}
-
-function timeToSeconds(t) {
-    const p = String(t).split(':');
-    if (p.length !== 3) return 0;
-    return parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
-}
-
-function secondsToTime(s) {
+// 時間表示用
+function formatTime(s) {
     const h = Math.floor(s / 3600).toString().padStart(2, '0');
     const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
     const sc = (s % 60).toString().padStart(2, '0');
     return `${h}:${m}:${sc}`;
 }
 
-async function deleteLog(id) {
-    if (!confirm("削除しますか？")) return;
-    await fetch(URL, { method: "POST", body: JSON.stringify({ action: "delete", id: id }) });
-    await fetchAndProcessData(); // 削除後に再計算して表示
-}
-
-// --- タイマー機能 (既存) ---
+// 開始
 document.getElementById('startButton').onclick = () => {
     if (timerInterval) return;
     startTime = Date.now() - elapsedTime;
     timerInterval = setInterval(() => {
         elapsedTime = Date.now() - startTime;
-        timerDisplay.textContent = secondsToTime(Math.floor(elapsedTime / 1000));
+        timerDisplay.textContent = formatTime(Math.floor(elapsedTime / 1000));
     }, 100);
 };
 
+// 終了 ＆ 保存 ＆ リセット
 document.getElementById('stopButton').onclick = async () => {
     if (elapsedTime < 1000) return;
-    const time = timerDisplay.textContent;
+    const finalTime = timerDisplay.textContent;
+    
     clearInterval(timerInterval);
     timerInterval = null;
     elapsedTime = 0;
     timerDisplay.textContent = "00:00:00";
-    await fetch(URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "add", duration: time }) });
-    alert("保存しました。");
+
+    await fetch(URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({ action: "add", duration: finalTime })
+    });
+    alert("保存しました");
 };
+
+// リセット（中央のボタン）
+document.getElementById('resetButton').onclick = () => {
+    if(confirm("リセットしますか？")) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        elapsedTime = 0;
+        timerDisplay.textContent = "00:00:00";
+    }
+};
+
+// スプレッドシートから読み込んで集計
+async function fetchAndProcessData() {
+    const logList = document.getElementById('logList');
+    logList.innerHTML = "読み込み中...";
+    
+    try {
+        const response = await fetch(URL);
+        const rawLogs = await response.json();
+
+        let total = 0, today = 0, month = 0;
+        const now = new Date();
+        const tStr = now.toLocaleDateString();
+        const mStr = now.getFullYear() + "/" + (now.getMonth() + 1);
+
+        logList.innerHTML = "";
+        rawLogs.reverse().forEach(log => {
+            const lDate = new Date(log.timestamp);
+            const sec = log.duration.split(':').reduce((a, b) => a * 60 + +b, 0);
+            
+            total += sec;
+            if (lDate.toLocaleDateString() === tStr) today += sec;
+            if (lDate.getFullYear() + "/" + (lDate.getMonth() + 1) === mStr) month += sec;
+
+            const div = document.createElement('div');
+            div.className = 'log-card';
+            div.innerHTML = `<div><small>${lDate.toLocaleString()}</small><div>${log.duration}</div></div>
+                             <button onclick="deleteLog('${log.id}')" class="del-btn">削除</button>`;
+            logList.appendChild(div);
+        });
+
+        document.getElementById('statToday').textContent = formatTime(today);
+        document.getElementById('statMonth').textContent = formatTime(month);
+        document.getElementById('statTotal').textContent = formatTime(total);
+    } catch (e) { logList.innerHTML = "取得失敗"; }
+}
+
+async function deleteLog(id) {
+    if(!confirm("削除しますか？")) return;
+    await fetch(URL, { method: "POST", body: JSON.stringify({ action: "delete", id: id }) });
+    await fetchAndProcessData();
+}
