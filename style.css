@@ -1,79 +1,31 @@
-/* 全体のリセットと背景 */
 body {
     margin: 0;
-    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     background-color: #f0f2f5;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: sans-serif;
 }
-
-/* アプリのカード */
 .container {
     background: white;
-    padding: 40px;
+    padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     text-align: center;
-    width: 300px;
 }
-
-h1 {
-    color: #333;
-    font-size: 24px;
-    margin-bottom: 30px;
-}
-
-/* タイマーの数字 */
 .timer {
     font-size: 48px;
-    font-weight: bold;
-    color: #007bff;
-    margin-bottom: 30px;
-    font-variant-numeric: tabular-nums; /* 数字の幅を固定してガタつき防止 */
+    margin: 20px 0;
+    color: #333;
 }
-
-/* ボタンの配置 */
-.controls {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-}
-
-/* ボタン共通設定 */
 button {
-    padding: 12px 25px;
+    padding: 10px 20px;
     font-size: 16px;
-    font-weight: bold;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    margin: 5px;
 }
-
-/* 開始ボタン */
-#startButton {
-    background-color: #28a745;
-    color: white;
-}
-
-#startButton:hover {
-    background-color: #218838;
-}
-
-#startButton:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-/* 終了ボタン */
-#stopButton {
-    background-color: #dc3545;
-    color: white;
-}
-
-#stopButton:hover {
-    background-color: #c82333;
-}
+#startButton { background-color: #e0e5ec; box-shadow: 5px 5px 10px #b8bec5, -5px -5px 10px #ffffff; }
+#stopButton { background-color: #e0e5ec; box-shadow: 5px 5px 10px #b8bec5, -5px -5px 10px #ffffff; color: blue; }
