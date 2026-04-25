@@ -9,6 +9,15 @@ function formatTime(s) {
     return `${h}:${m}:${sc}`;
 }
 
+function startTimer() {
+    if (timerInterval) return;
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        document.getElementById('timerDisplay').textContent = formatTime(Math.floor(elapsedTime / 1000));
+    }, 100);
+}
+
 async function stopTimer() {
     if (elapsedTime < 1000) return;
     const timeStr = document.getElementById('timerDisplay').textContent;
@@ -18,13 +27,13 @@ async function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
-    // 送信データに action: "add" を追加
+    // fetchでGASに送信
     fetch(API_URL, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ 
-            action: "add",    // ←これが重要！
+            action: "add", 
             duration: timeStr 
         })
     });
@@ -33,10 +42,9 @@ async function stopTimer() {
     elapsedTime = 0;
     document.getElementById('timerDisplay').textContent = "00:00:00";
 }
-   method: "POST",
-        mode: "no-cors",
-        headers: { "Conte
+
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    const target = document.getElementById(id);
+    if(target) target.classList.add('active');
 }
