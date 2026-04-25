@@ -107,6 +107,14 @@ async function fetchAndProcessData() {
 
 async function deleteLog(id) {
     if(!confirm("削除しますか？")) return;
-    await fetch(URL, { method: "POST", body: JSON.stringify({ action: "delete", id: id }) });
-    await fetchAndProcessData();
-}
+   await fetch(URL, {
+            method: "POST",
+            mode: "no-cors", // ← これが重要！
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                action: "add",
+                duration: finalTime
+            })
+        });
