@@ -19,77 +19,44 @@ function startTimer() {
 }
 
 async function stopTimer() {
-    const sec = Math.floor(elapsedTime / 1000);
-    if (sec < 1) return;
-    const finalTime = document.getElementById('timerDisplay').textContent;
-    
-    if (!confirm(`記録しますか？ : ${finalTime}`)) return;
+    if (elapsedTime < 1000) return;
+    const timeStr = document.getElementById('timerDisplay').textContent;
+    if (!confirm("記録しますか？")) return;
 
     clearInterval(timerInterval);
     timerInterval = null;
 
-    try {
-        // 送信データをオブジェクトにする
-        const payload = {
-            action: "add",
-            duration: finalTime,
-            seconds: sec // 数値としても送る
-        };
+    // 送信
+    fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "add", duration: timeStr })
+    });
 
-        // GASへ送信
-        await fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors", // セキュリティブロック回避
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(payload)
-        });
-
-        alert("送信完了！反映されない場合はGASの承認を確認してください。");
-        elapsedTime = 0;
-        document.getElementById('timerDisplay').textContent = "00:00:00";
-    } catch (e) {
-        alert("送信エラー:" + e);
-    }
+    alert("送信しました（反映に数秒かかります）");
+    elapsedTime = 0;
+    document.getElementById('timerDisplay').textContent = "00:00:00";
 }
 
 async function fetchAndProcessData() {
     const logList = document.getElementById('logList');
     logList.innerHTML = "観測中...";
-    
     try {
-        const response = await fetch(API_URL);
-        const logs = await response.json();
-        
-        let total = 0, today = 0;
-        const todayStr = new Date().toDateString();
+        const res = await fetch(API_URL);
+        const logs = await res.json();
         logList.innerHTML = "";
-
         logs.reverse().forEach(log => {
-            // 文字列 "00:00:00" から秒数を復元
-            const p = log.duration.split(':');
-            const s = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
-            
-            total += s;
-            const lDate = new Date(log.timestamp);
-            if (lDate.toDateString() === todayStr) today += s;
-
             const card = document.createElement('div');
             card.className = 'star-card';
-            card.innerHTML = `<small>${lDate.toLocaleString()}</small><p>${log.duration}</p>`;
+            card.innerHTML = `<small>${log.timestamp}</small><p>${log.duration}</p>`;
             logList.appendChild(card);
         });
-
-        document.getElementById('statToday').textContent = formatTime(today);
-        document.getElementById('statTotal').textContent = formatTime(total);
     } catch (e) {
-        logList.innerHTML = "データが取得できません。";
-        console.error(e);
+        logList.innerHTML = "データがありません。";
     }
 }
 
-// ページ切り替え関数
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    if(id !== 'page-timer') fetchAndProcessData();
+    if (id !== 'page-timer') fetchAndProcessData();
 }
