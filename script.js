@@ -8,6 +8,7 @@ const timerDisplay = document.getElementById('timerDisplay');
 const startButton = document.getElementById('startButton');
 const stopButton = document.getElementById('stopButton');
 
+// タイマー開始
 function startTimer() {
     startTime = Date.now() - elapsedTime;
     timerInterval = setInterval(() => {
@@ -20,23 +21,27 @@ function startTimer() {
     startButton.disabled = true;
 }
 
+// タイマー停止 ＆ スプレッドシートへ送信
 async function stopTimer() {
     clearInterval(timerInterval);
     startButton.disabled = false;
     const durationText = timerDisplay.textContent;
 
-    // GASに送信
+    // GASにデータを送る
     try {
         await fetch(WEB_APP_URL, {
             method: "POST",
-            mode: "no-cors",
+            mode: "no-cors", // GAS連携の必須設定
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ duration: durationText })
         });
-        alert("スプレッドシートに送信しました！");
+        alert("スプレッドシートに保存しました！");
     } catch (e) {
-        alert("送信エラーが起きました。");
+        console.error(e);
+        alert("エラーが発生しました");
     }
 }
 
+// ボタンにクリックイベントを登録
 startButton.addEventListener('click', startTimer);
 stopButton.addEventListener('click', stopTimer);
