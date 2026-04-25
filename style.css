@@ -1,56 +1,29 @@
-:root {
-    --bg-color: #f5f7fa;
-    --text-color: #4a5568;
-    --shadow-light: #ffffff;
-    --shadow-dark: #d1d9e6;
-}
+:root { --bg: #f8faff; --shadow: #d1d9e6; --accent: #4a90e2; }
+body { margin: 0; background: var(--bg); font-family: sans-serif; overflow: hidden; }
+.page { display: none; height: 90vh; padding: 20px; text-align: center; overflow-y: auto; }
+.page.active { display: block; }
 
-body {
-    margin: 0; background: var(--bg-color);
-    font-family: 'Segoe UI', sans-serif;
-    display: flex; justify-content: center; align-items: center; height: 100vh;
-}
-
-.app-container {
-    width: 90%; max-width: 400px; text-align: center;
-}
-
-.stats-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 40px;
-}
-
-.stat-card {
-    background: var(--bg-color); padding: 10px; border-radius: 15px;
-    box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
-    font-size: 12px; color: var(--text-color);
-}
-
-.stat-card b { display: block; font-size: 14px; margin-top: 5px; color: #3182ce; }
-
+/* 円形タイマー */
 .timer-circle {
-    width: 260px; height: 260px; margin: 0 auto 40px;
-    background: var(--bg-color); border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
-    box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
-    border: 8px solid #fff;
+    width: 250px; height: 250px; margin: 50px auto; background: var(--bg);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    box-shadow: 15px 15px 30px var(--shadow), -15px -15px 30px #fff;
+    font-size: 40px; font-weight: bold; color: #444;
 }
 
-#timerDisplay { font-size: 42px; font-weight: bold; color: var(--text-color); }
+/* ボタン */
+button { border: none; border-radius: 12px; background: var(--bg); cursor: pointer; transition: 0.2s; }
+.controls button { width: 80px; height: 80px; border-radius: 50%; margin: 10px; box-shadow: 5px 5px 10px var(--shadow), -5px -5px 10px #fff; }
+.controls button:active { box-shadow: inset 3px 3px 6px var(--shadow); }
 
-.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+/* 統計ボックス */
+.stat-box { background: white; padding: 20px; border-radius: 20px; margin: 20px 0; box-shadow: 5px 5px 15px var(--shadow); }
+.stat-box p { font-size: 32px; color: var(--accent); margin: 10px 0; }
 
-.btn-main {
-    width: 100px; height: 100px; border-radius: 50%; border: none;
-    background: var(--bg-color); cursor: pointer; font-weight: bold;
-    box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
-    color: #48bb78; transition: 0.2s;
-}
+/* 下部メニュー */
+.bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+.bottom-nav button { flex: 1; border-radius: 0; font-size: 14px; color: #777; }
 
-.btn-main.stop { color: #f56565; }
-.btn-main:active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
-
-.btn-sub {
-    width: 100%; margin-top: 20px; padding: 12px; border-radius: 15px; border: none;
-    background: var(--bg-color); color: #718096; cursor: pointer;
-    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-}
+/* ログアイテム */
+.log-item { display: flex; justify-content: space-between; background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+.del-btn { color: #ff5e5e; font-weight: bold; padding: 5px 10px; }
