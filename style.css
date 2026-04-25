@@ -1,5 +1,5 @@
 // ★デプロイ後のURLをここに貼り付けてください
-const API_URL = "YOUR_GAS_DEPLOY_URL";
+const API_URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
 
 let startTime, timerInterval, elapsedTime = 0;
 
