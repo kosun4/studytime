@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Study App</title>
+    <title>Apple Style StudyTimer</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,11 +18,11 @@
                 <button id="startButton" class="glass-btn primary">開始</button>
                 <button id="stopButton" class="glass-btn danger">終了</button>
             </div>
-            <button id="resetButton" class="text-btn">リセット</button>
+            <button id="resetButton" class="text-btn">保存せずにリセット</button>
         </section>
 
         <section id="page-stats" class="page">
-            <h2 class="title">合計学習時間</h2>
+            <h2 class="title">学習統計</h2>
             <div class="stat-card glass">
                 <span>今日の合計</span>
                 <p id="statToday">0h 0m</p>
@@ -35,8 +35,7 @@
 
         <section id="page-log" class="page">
             <h2 class="title">学習ログ</h2>
-            <div id="logList" class="log-container">
-                </div>
+            <div id="logList" class="log-container"></div>
         </section>
     </main>
 
