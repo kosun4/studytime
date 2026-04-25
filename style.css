@@ -1,185 +1,57 @@
-/* --- 変数設定 --- */
-:root {
-    --glass-bg: rgba(255, 255, 255, 0.7); /* ガラスの白さ */
-    --glass-border: rgba(255, 255, 255, 0.4); /* ガラスの縁 */
-    --text-main: #1d1d1f; /* Apple標準の黒 */
-    --accent-blue: #0071e3; /* 開始・統計の色 */
-    --accent-red: #ff3b30; /* 終了・削除の色 */
-    --accent-gray: #86868b; /* リセットの色 */
+const URL = "あなたのGASのURL"; // ★ここに新しいURLを貼り付け！
+
+async function fetchAndProcessData() {
+    const logList = document.getElementById('logList');
+    if(logList) logList.innerHTML = "同期中...";
+
+    try {
+        const response = await fetch(URL);
+        const rawLogs = await response.json();
+
+        let totalSec = 0, todaySec = 0, monthSec = 0;
+        const now = new Date();
+        const todayStr = now.toLocaleDateString();
+        const monthStr = now.getFullYear() + "/" + (now.getMonth() + 1);
+
+        if(logList) logList.innerHTML = "";
+
+        // 新しい順に表示
+        rawLogs.reverse().forEach(log => {
+            const lDate = new Date(log.timestamp);
+            const lDateStr = lDate.toLocaleDateString();
+            const lMonthStr = lDate.getFullYear() + "/" + (lDate.getMonth() + 1);
+            
+            // 時間を秒に変換して加算
+            const p = log.duration.split(':');
+            const sec = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
+            
+            totalSec += sec;
+            if (lDateStr === todayStr) todaySec += sec;
+            if (lMonthStr === monthStr) monthSeconds += sec; // ここが「今月合計」
+
+            // ログの表示
+            const div = document.createElement('div');
+            div.className = 'log-card';
+            div.innerHTML = `
+                <div><small>${lDate.toLocaleString()}</small><div>${log.duration}</div></div>
+                <button onclick="deleteLog('${log.id}')" class="del-btn">削除</button>`;
+            if(logList) logList.appendChild(div);
+        });
+
+        // 統計画面への反映
+        document.getElementById('statToday').textContent = formatTime(todaySec);
+        document.getElementById('statMonth').textContent = formatTime(monthSec); // 今月
+        document.getElementById('statTotal').textContent = formatTime(totalSec);
+
+    } catch (e) {
+        console.error("エラー:", e);
+    }
 }
 
-/* --- 全体レイアウト --- */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
-    background-color: #f5f5f7;
-    color: var(--text-main);
-    height: 100vh;
-    overflow: hidden; /* スクロールをアプリ風に制限 */
-}
-
-/* 背景にうっすら青い光を置く（ガラスを引き立たせるため） */
-.bg-blur {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 50% 50%, rgba(0, 113, 227, 0.08) 0%, #ffffff 100%);
-    z-index: -1;
-}
-
-/* 各ページの設定 */
-.page {
-    display: none;
-    padding: 40px 20px;
-    text-align: center;
-    height: 82vh;
-    overflow-y: auto;
-}
-
-.page.active {
-    display: block;
-    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- 1. タイマー（ガラスの円） --- */
-.glass-timer {
-    width: 280px;
-    height: 280px;
-    margin: 40px auto;
-    background: var(--glass-bg);
-    /* 重要：背後をぼかす（これがガラス質感の正体） */
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px); 
-    border: 1px solid var(--glass-border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
-}
-
-#timerDisplay {
-    font-size: 52px;
-    font-weight: 200; /* Apple特有の細いフォント */
-    font-variant-numeric: tabular-nums; /* 数字が動いても幅がズレない設定 */
-    letter-spacing: -1px;
-}
-
-/* --- 2. 3連ボタンコントロール --- */
-.glass-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px; /* ボタン同士の隙間 */
-    margin-top: 20px;
-}
-
-.glass-btn {
-    width: 85px;
-    height: 85px;
-    border-radius: 50%;
-    border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
-}
-
-/* ボタンを押したときのアニメーション */
-.glass-btn:active {
-    transform: scale(0.92);
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.glass-btn.primary { color: var(--accent-blue); }
-.glass-btn.danger { color: var(--accent-red); }
-.glass-btn.secondary { color: var(--accent-gray); }
-
-/* --- 3. 統計カード --- */
-.stat-card {
-    background: white;
-    padding: 22px;
-    border-radius: 20px;
-    margin-bottom: 15px;
-    text-align: left;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.stat-card span {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--accent-gray);
-    display: block;
-}
-
-.stat-card p {
-    font-size: 32px;
-    font-weight: 700;
-    margin: 8px 0 0;
-    color: var(--text-main);
-    font-variant-numeric: tabular-nums;
-}
-
-/* --- 4. ログリスト --- */
-.log-card {
-    background: white;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-}
-
-.del-btn {
-    color: var(--accent-red);
-    background: rgba(255, 59, 48, 0.1);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 13px;
-}
-
-/* --- 5. 下部ナビゲーション --- */
-.apple-nav {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    height: 85px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    display: flex;
-    justify-content: space-around;
-    border-top: 1px solid #d2d2d7;
-    padding-bottom: env(safe-area-inset-bottom); /* iPhoneのバー対策 */
-}
-
-.nav-item {
-    border: none;
-    background: none;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-gray);
-    cursor: pointer;
-    flex: 1;
-}
-
-.nav-item:focus {
-    color: var(--accent-blue);
+// 秒を 00:00:00 に戻す
+function formatTime(s) {
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const sc = (s % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${sc}`;
 }
