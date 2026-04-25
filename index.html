@@ -21,27 +21,18 @@
                 </div>
             </div>
             <div class="controls">
-                <button onclick="startTimer()" class="btn btn-start">点火</button>
-                <button onclick="resetTimer()" class="btn btn-reset">還送</button>
-                <button onclick="stopTimer()" class="btn btn-stop">着陸</button>
+                <button type="button" onclick="startTimer()" class="btn btn-start">点火</button>
+                <button type="button" onclick="resetTimer()" class="btn btn-reset">還送</button>
+                <button type="button" onclick="stopTimer()" class="btn btn-stop">着陸</button>
             </div>
         </section>
 
         <section id="page-stats" class="page">
             <div class="page-header">天体観測記録</div>
             <div class="stat-list">
-                <div class="star-card">
-                    <span>本日</span>
-                    <p id="statToday">00:00:00</p>
-                </div>
-                <div class="star-card">
-                    <span>今月</span>
-                    <p id="statMonth">00:00:00</p>
-                </div>
-                <div class="star-card">
-                    <span>累計</span>
-                    <p id="statTotal">00:00:00</p>
-                </div>
+                <div class="star-card"><span>本日</span><p id="statToday">00:00:00</p></div>
+                <div class="star-card"><span>今月</span><p id="statMonth">00:00:00</p></div>
+                <div class="star-card"><span>累計</span><p id="statTotal">00:00:00</p></div>
             </div>
         </section>
 
@@ -52,9 +43,9 @@
     </main>
 
     <nav class="starlight-nav">
-        <button onclick="showPage('page-timer')" class="nav-item active" id="nav-timer">観測</button>
-        <button onclick="showPage('page-stats')" class="nav-item" id="nav-stats">記録</button>
-        <button onclick="showPage('page-log')" class="nav-item" id="nav-log">軌跡</button>
+        <button type="button" onclick="showPage('page-timer')" class="nav-item active" id="nav-timer">観測</button>
+        <button type="button" onclick="showPage('page-stats')" class="nav-item" id="nav-stats">記録</button>
+        <button type="button" onclick="showPage('page-log')" class="nav-item" id="nav-log">軌跡</button>
     </nav>
 
     <script src="script.js"></script>
