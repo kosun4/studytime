@@ -3,56 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Study Glass Light</title>
+    <title>Stellar Focus</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="glass-bg">
-        <div class="circle c1"></div>
-        <div class="circle c2"></div>
+    <div class="starry-sky">
+        <div class="stars"></div>
+        <div class="twinkle"></div>
+        <div class="shooting-star"></div>
     </div>
 
     <main id="app">
         <section id="page-timer" class="page active">
-            <div class="timer-orb">
-                <div id="timerDisplay">00:00:00</div>
+            <div class="timer-container">
+                <div class="moon-timer">
+                    <div id="timerDisplay">00:00:00</div>
+                </div>
             </div>
             <div class="controls">
-                <button onclick="startTimer()" class="btn btn-start">開始</button>
-                <button onclick="resetTimer()" class="btn btn-reset">リセット</button>
-                <button onclick="stopTimer()" class="btn btn-stop">終了</button>
+                <button onclick="startTimer()" class="btn btn-start">点火</button>
+                <button onclick="resetTimer()" class="btn btn-reset">還送</button>
+                <button onclick="stopTimer()" class="btn btn-stop">着陸</button>
             </div>
         </section>
 
         <section id="page-stats" class="page">
-            <div class="page-header">統計レポート</div>
+            <div class="page-header">天体観測記録</div>
             <div class="stat-list">
-                <div class="glass-card">
-                    <span>Today</span>
+                <div class="star-card">
+                    <span>本日</span>
                     <p id="statToday">00:00:00</p>
                 </div>
-                <div class="glass-card">
-                    <span>This Month</span>
+                <div class="star-card">
+                    <span>今月</span>
                     <p id="statMonth">00:00:00</p>
                 </div>
-                <div class="glass-card">
-                    <span>Total Study Time</span>
+                <div class="star-card">
+                    <span>累計</span>
                     <p id="statTotal">00:00:00</p>
                 </div>
             </div>
         </section>
 
         <section id="page-log" class="page">
-            <div class="page-header">学習履歴</div>
-            <div id="logList">
-                </div>
+            <div class="page-header">星の軌跡</div>
+            <div id="logList"></div>
         </section>
     </main>
 
-    <nav class="dock">
-        <button onclick="showPage('page-timer')" class="dock-item active" id="nav-timer">計測</button>
-        <button onclick="showPage('page-stats')" class="dock-item" id="nav-stats">統計</button>
-        <button onclick="showPage('page-log')" class="dock-item" id="nav-log">ログ</button>
+    <nav class="starlight-nav">
+        <button onclick="showPage('page-timer')" class="nav-item active" id="nav-timer">観測</button>
+        <button onclick="showPage('page-stats')" class="nav-item" id="nav-stats">記録</button>
+        <button onclick="showPage('page-log')" class="nav-item" id="nav-log">軌跡</button>
     </nav>
 
     <script src="script.js"></script>
