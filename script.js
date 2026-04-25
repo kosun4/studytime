@@ -1,5 +1,5 @@
 // あなたの新しいGAS URLをここに貼り付け
-const GAS_URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec"; 
+const GAS_URL = "https://docs.google.com/spreadsheets/d/19X98T_OItdl8zkYNTT9zep3YTSsTXzFNqtszEZp1Duc/edit?gid=0#gid=0"; 
 
 let startTime, elapsedTime = 0, timerInterval;
 let logs = []; 
