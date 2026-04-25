@@ -1,18 +1,22 @@
-const URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec"; // ★ここに自分のURLを貼る
+// ★あなたのGAS URLに貼り替えてください
+const URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
 
 let startTime, timerInterval, elapsedTime = 0;
 const timerDisplay = document.getElementById('timerDisplay');
 
 async function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    document.getElementById(id.replace('page', 'nav')).classList.add('active');
+    
     if (id !== 'page-timer') await fetchAndProcessData();
 }
 
-function formatTime(totalSeconds) {
-    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-    const sc = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+function formatTime(s) {
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const sc = Math.floor(s % 60).toString().padStart(2, '0');
     return `${h}:${m}:${sc}`;
 }
 
@@ -32,10 +36,11 @@ async function stopTimer() {
     timerInterval = null;
     elapsedTime = 0;
     timerDisplay.textContent = "00:00:00";
+
     try {
         await fetch(URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "add", duration: finalTime }) });
-        alert("保存しました");
-    } catch (e) { alert("エラーが発生しました"); }
+        alert("保存完了");
+    } catch (e) { alert("保存に失敗しました"); }
 }
 
 function resetTimer() {
@@ -49,53 +54,43 @@ function resetTimer() {
 
 async function fetchAndProcessData() {
     const logList = document.getElementById('logList');
-    if(logList) logList.innerHTML = "読み込み中...";
+    logList.innerHTML = "<p style='text-align:center'>読み込み中...</p>";
     try {
         const response = await fetch(URL);
         const rawLogs = await response.json();
         let total = 0, today = 0, month = 0;
         const now = new Date();
-        const todayStr = now.toLocaleDateString();
-        const monthStr = now.getFullYear() + "/" + (now.getMonth() + 1);
+        const tStr = now.toLocaleDateString();
+        const mStr = now.getFullYear() + "/" + (now.getMonth() + 1);
 
-        if(logList) logList.innerHTML = "";
-        
+        logList.innerHTML = "";
         rawLogs.reverse().forEach(log => {
             let sec = 0;
-            
-            // --- 【修正の核心】スプレッドシートの1899年バグを完全回避する処理 ---
+            // 1899年バグ対策
             if (typeof log.duration === 'string' && log.duration.includes(':')) {
-                // 文字列 "00:00:03" として届いた場合
                 const p = log.duration.split(':');
                 sec = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
             } else {
-                // 日付オブジェクトとして届いた場合（1899/12/30...）
                 const d = new Date(log.duration);
-                if (!isNaN(d.getTime())) {
-                    // 日付（年・月・日）を無視して、時・分・秒だけを秒数に変換
-                    sec = d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds();
-                }
+                if (!isNaN(d.getTime())) sec = d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds();
             }
 
             total += sec;
             const lDate = new Date(log.timestamp);
-            if (lDate.toLocaleDateString() === todayStr) today += sec;
-            if (lDate.getFullYear() + "/" + (lDate.getMonth() + 1) === monthStr) month += sec;
+            if (lDate.toLocaleDateString() === tStr) today += sec;
+            if (lDate.getFullYear() + "/" + (lDate.getMonth() + 1) === mStr) month += sec;
 
             const div = document.createElement('div');
             div.className = 'log-card';
             div.innerHTML = `<div><small>${lDate.toLocaleString()}</small><div><b>${formatTime(sec)}</b></div></div>
                              <button onclick="deleteLog('${log.id}')" class="del-btn">削除</button>`;
-            if(logList) logList.appendChild(div);
+            logList.appendChild(div);
         });
 
         document.getElementById('statToday').textContent = formatTime(today);
         document.getElementById('statMonth').textContent = formatTime(month);
         document.getElementById('statTotal').textContent = formatTime(total);
-    } catch (e) { 
-        console.error(e);
-        if(logList) logList.innerHTML = "データの取得に失敗しました"; 
-    }
+    } catch (e) { logList.innerHTML = "データが取得できませんでした"; }
 }
 
 async function deleteLog(id) {
