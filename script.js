@@ -1,83 +1,108 @@
-/**
- * データの保存 (POST)
- */
-function doPost(e) {
-  const lock = LockService.getScriptLock();
-  try {
-    // 10秒間のロックを取得（同時書き込みによるデータ破損防止）
-    lock.waitLock(10000);
+// ★デプロイ後のURL
+const API_URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
 
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("シート1");
-    if (!sheet) throw new Error("シートが見つかりません");
+let startTime, timerInterval, elapsedTime = 0;
 
-    let params;
-    try {
-      params = JSON.parse(e.postData.contents);
-    } catch(err) {
-      return createJsonResponse({result: "error", message: "JSON解析失敗"});
-    }
-
-    // --- 追加処理 ---
-    if (params.action === "add") {
-      const id = "ID-" + Utilities.getUuid().split("-")[0];
-      const now = new Date();
-      
-      sheet.appendRow([id, now, params.duration]);
-
-      // スプレッドシート側で「時間」として認識させる
-      const lastRow = sheet.getLastRow();
-      sheet.getRange(lastRow, 3).setNumberFormat("HH:mm:ss");
-
-      return createJsonResponse({result: "success", id: id});
-    } 
-
-    // --- 削除処理 ---
-    else if (params.action === "delete") {
-      const data = sheet.getDataRange().getDisplayValues();
-      for (var i = data.length - 1; i >= 1; i--) {
-        if (data[i][0] === params.id) {
-          sheet.deleteRow(i + 1);
-          return createJsonResponse({result: "success"});
-        }
-      }
-      return createJsonResponse({result: "error", message: "ID未検出"});
-    }
-
-    return createJsonResponse({result: "error", message: "無効なアクション"});
-
-  } catch (err) {
-    return createJsonResponse({result: "error", message: err.toString()});
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-/**
- * データの取得 (GET)
- */
-function doGet() {
-  try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("シート1");
-    if (!sheet) return createJsonResponse([]);
+// ページ切り替え
+async function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.dock-item').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
     
-    const values = sheet.getDataRange().getValues();
-    const displays = sheet.getDataRange().getDisplayValues();
-    const logs = [];
+    // ナビゲーションのID不一致を防ぐための微修正
+    const navId = 'nav-' + id.replace('page-', '');
+    const navElem = document.getElementById(navId);
+    if (navElem) navElem.classList.add('active');
+    
+    if (id !== 'page-timer') await fetchAndProcessData();
+}
 
-    for (var i = 1; i < displays.length; i++) {
-      logs.push({
-        id: displays[i][0], 
-        timestamp: values[i][1], // Dateオブジェクトのまま送信
-        duration: displays[i][2]  // "00:00:00"形式
-      });
+// 時間フォーマット (00:00:00)
+function formatTime(s) {
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const sc = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${sc}`;
+}
+
+// タイマー開始
+function startTimer() {
+    if (timerInterval) return;
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        document.getElementById('timerDisplay').textContent = formatTime(Math.floor(elapsedTime / 1000));
+    }, 100);
+}
+
+// タイマー終了・保存
+async function stopTimer() {
+    if (elapsedTime < 1000) return;
+    const finalTime = document.getElementById('timerDisplay').textContent;
+    
+    if (!confirm(`${finalTime} を記録しますか？`)) return;
+
+    // UIを停止
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            mode: "cors", // 明示的に指定
+            body: JSON.stringify({ action: "add", duration: finalTime })
+        });
+        
+        elapsedTime = 0;
+        document.getElementById('timerDisplay').textContent = "00:00:00";
+        alert("保存完了しました！");
+    } catch (e) {
+        console.error(e);
+        alert("保存に失敗しました。ネット接続を確認してください。");
     }
-    return createJsonResponse(logs);
-  } catch (e) {
-    return createJsonResponse({result: "error", message: e.toString()});
-  }
 }
 
-function createJsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+// タイマーリセット
+function resetTimer() {
+    if(confirm("リセットしますか？")) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        elapsedTime = 0;
+        document.getElementById('timerDisplay').textContent = "00:00:00";
+    }
 }
+
+// データの取得と統計の算出
+async function fetchAndProcessData() {
+    const logList = document.getElementById('logList');
+    logList.innerHTML = "<p style='text-align:center; padding:20px; color:#86868b;'>読み込み中...</p>";
+    
+    try {
+        const response = await fetch(API_URL);
+        const logs = await response.json();
+        
+        if (!Array.isArray(logs)) throw new Error("Invalid format");
+
+        let totalSec = 0, todaySec = 0, monthSec = 0;
+        const now = new Date();
+        const todayStr = now.toDateString();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        logList.innerHTML = "";
+        
+        // 1. まず全データの集計を行う（元の順番で）
+        logs.forEach(log => {
+            const p = log.duration.split(':');
+            const sec = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
+            
+            // 日付を確実にパース
+            const lDate = new Date(log.timestamp);
+            
+            totalSec += sec;
+            if (lDate.toDateString() === todayStr) todaySec += sec;
+            if (lDate.getMonth() === currentMonth && lDate.getFullYear() === currentYear) monthSec += sec;
+        });
+
+        // 2. 表示用にコピーして反転、リスト生成
+        [...logs].reverse().forEach(log => {
