@@ -7,15 +7,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="blob-c">
-        <div class="blob"></div>
-        <div class="blob"></div>
-        <div class="blob"></div>
+    <div class="background-elements">
+        <div class="blob color-1"></div>
+        <div class="blob color-2"></div>
     </div>
 
     <main id="app">
         <section id="page-timer" class="page active">
-            <div class="timer-container">
+            <div class="glass-timer">
                 <div id="timerDisplay">00:00:00</div>
             </div>
             <div class="controls">
@@ -26,10 +25,8 @@
         </section>
 
         <section id="page-stats" class="page">
-            <div class="glass-header">
-                <h2>学習統計</h2>
-            </div>
-            <div class="stat-grid">
+            <div class="page-title">学習統計</div>
+            <div class="stat-container">
                 <div class="stat-card"><span>今日</span><p id="statToday">00:00:00</p></div>
                 <div class="stat-card"><span>今月</span><p id="statMonth">00:00:00</p></div>
                 <div class="stat-card"><span>合計</span><p id="statTotal">00:00:00</p></div>
@@ -37,9 +34,7 @@
         </section>
 
         <section id="page-log" class="page">
-            <div class="glass-header">
-                <h2>学習ログ</h2>
-            </div>
+            <div class="page-title">学習ログ</div>
             <div id="logList"></div>
         </section>
     </main>
