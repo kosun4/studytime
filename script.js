@@ -1,4 +1,4 @@
-const URL = "あなたのGASのURL"; // ★ここに自分のURLを貼ってください
+const URL = "あなたのGASのURL"; // ★ここに自分のURLを貼る
 
 let startTime, timerInterval, elapsedTime = 0;
 const timerDisplay = document.getElementById('timerDisplay');
@@ -6,10 +6,10 @@ const timerDisplay = document.getElementById('timerDisplay');
 async function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    // 統計・ログ画面を開いたときに最新データを取得
     if (id !== 'page-timer') await fetchAndProcessData();
 }
 
-// 時間表示用
 function formatTime(s) {
     const h = Math.floor(s / 3600).toString().padStart(2, '0');
     const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
@@ -17,7 +17,7 @@ function formatTime(s) {
     return `${h}:${m}:${sc}`;
 }
 
-// 開始
+// 開始ボタン
 document.getElementById('startButton').onclick = () => {
     if (timerInterval) return;
     startTime = Date.now() - elapsedTime;
@@ -27,7 +27,7 @@ document.getElementById('startButton').onclick = () => {
     }, 100);
 };
 
-// 終了 ＆ 保存 ＆ リセット
+// 終了（保存・リセット）
 document.getElementById('stopButton').onclick = async () => {
     if (elapsedTime < 1000) return;
     const finalTime = timerDisplay.textContent;
@@ -42,12 +42,12 @@ document.getElementById('stopButton').onclick = async () => {
         mode: "no-cors",
         body: JSON.stringify({ action: "add", duration: finalTime })
     });
-    alert("保存しました");
+    alert("スプレッドシートに保存しました！");
 };
 
-// リセット（中央のボタン）
+// リセットボタン（中央）
 document.getElementById('resetButton').onclick = () => {
-    if(confirm("リセットしますか？")) {
+    if(confirm("今の計測をリセットしますか？")) {
         clearInterval(timerInterval);
         timerInterval = null;
         elapsedTime = 0;
@@ -55,10 +55,10 @@ document.getElementById('resetButton').onclick = () => {
     }
 };
 
-// スプレッドシートから読み込んで集計
+// スプレッドシートからデータを読み込んで集計
 async function fetchAndProcessData() {
     const logList = document.getElementById('logList');
-    logList.innerHTML = "読み込み中...";
+    if(logList) logList.innerHTML = "読み込み中...";
     
     try {
         const response = await fetch(URL);
@@ -69,7 +69,7 @@ async function fetchAndProcessData() {
         const tStr = now.toLocaleDateString();
         const mStr = now.getFullYear() + "/" + (now.getMonth() + 1);
 
-        logList.innerHTML = "";
+        if(logList) logList.innerHTML = "";
         rawLogs.reverse().forEach(log => {
             const lDate = new Date(log.timestamp);
             const sec = log.duration.split(':').reduce((a, b) => a * 60 + +b, 0);
@@ -82,17 +82,19 @@ async function fetchAndProcessData() {
             div.className = 'log-card';
             div.innerHTML = `<div><small>${lDate.toLocaleString()}</small><div>${log.duration}</div></div>
                              <button onclick="deleteLog('${log.id}')" class="del-btn">削除</button>`;
-            logList.appendChild(div);
+            if(logList) logList.appendChild(div);
         });
 
         document.getElementById('statToday').textContent = formatTime(today);
         document.getElementById('statMonth').textContent = formatTime(month);
         document.getElementById('statTotal').textContent = formatTime(total);
-    } catch (e) { logList.innerHTML = "取得失敗"; }
+    } catch (e) { 
+        if(logList) logList.innerHTML = "データがありません"; 
+    }
 }
 
 async function deleteLog(id) {
-    if(!confirm("削除しますか？")) return;
+    if(!confirm("このログを削除しますか？")) return;
     await fetch(URL, { method: "POST", body: JSON.stringify({ action: "delete", id: id }) });
-    await fetchAndProcessData();
+    await fetchAndProcessData(); // 削除後に再集計
 }
