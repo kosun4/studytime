@@ -1,85 +1,68 @@
-:root {
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.4);
-    --text-main: #1d1d1f;
-    --accent-blue: #0071e3;
-    --accent-red: #ff3b30;
+const URL = "あなたのGASのURL";
+let startTime, timerInterval, elapsedTime = 0;
+
+const timerDisplay = document.getElementById('timerDisplay');
+const startBtn = document.getElementById('startButton');
+
+// 画面切り替え
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id !== 'page-timer') fetchAllData(); 
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f5f5f7;
-    height: 100vh;
-    overflow: hidden;
-    color: var(--text-main);
+// タイマー開始
+startBtn.onclick = () => {
+    if (timerInterval) return;
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        updateDisplay(elapsedTime);
+    }, 1000);
+};
+
+// 終了 ＆ 送信 ＆ リセット
+document.getElementById('stopButton').onclick = async () => {
+    if (!timerInterval && elapsedTime === 0) return;
+    
+    clearInterval(timerInterval);
+    timerInterval = null;
+    const time = timerDisplay.textContent;
+
+    // 送信
+    try {
+        await fetch(URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ action: "add", duration: time })
+        });
+        alert("送信完了しました！");
+    } catch (e) {
+        alert("送信エラー");
+    }
+
+    // 自動リセット
+    reset();
+};
+
+document.getElementById('resetButton').onclick = reset;
+
+function reset() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    elapsedTime = 0;
+    timerDisplay.textContent = "00:00:00";
 }
 
-/* 背景のボケた円 */
-.bg-blur {
-    position: fixed;
-    top: -10%; left: -10%;
-    width: 120%; height: 120%;
-    background: radial-gradient(circle, rgba(0,113,227,0.1) 0%, rgba(245,245,247,1) 70%);
-    z-index: -1;
+function updateDisplay(time) {
+    const s = Math.floor((time/1000)%60).toString().padStart(2,'0');
+    const m = Math.floor((time/(1000*60))%60).toString().padStart(2,'0');
+    const h = Math.floor(time/(1000*60*60)).toString().padStart(2,'0');
+    timerDisplay.textContent = `${h}:${m}:${s}`;
 }
 
-#app { height: 92vh; display: flex; flex-direction: column; }
-
-.page {
-    display: none;
-    padding: 40px 20px;
-    animation: fadeIn 0.4s ease;
-    text-align: center;
-}
-.page.active { display: block; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* ガラスの円 */
-.glass-circle {
-    width: 280px; height: 280px;
-    margin: 40px auto;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-    font-size: 54px; font-weight: 200; letter-spacing: -1px;
-}
-
-/* ガラスボタン */
-.glass-btn {
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
-    backdrop-filter: blur(15px);
-    font-size: 18px; font-weight: 500;
-    margin: 10px;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    transition: 0.3s;
-}
-.glass-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.9); }
-.glass-btn.primary { color: var(--accent-blue); }
-.glass-btn.danger { color: var(--accent-red); }
-
-/* ナビゲーション */
-.apple-nav {
-    position: fixed; bottom: 0; width: 100%;
-    height: 80px; background: rgba(255,255,255,0.8);
-    backdrop-filter: blur(20px);
-    display: flex; justify-content: space-around; align-items: center;
-    border-top: 1px solid #d2d2d7;
-}
-.nav-item { border: none; background: none; font-size: 13px; color: #86868b; cursor: pointer; }
-
-/* ログカード */
-.log-card {
-    background: white; border-radius: 14px; padding: 16px;
-    margin-bottom: 12px; display: flex; justify-content: space-between;
-    align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+// データの取得とログの表示（ここを強化）
+async function fetchAllData() {
+    const res = await fetch(URL + "?action=get"); // GAS側でGET対応するかPOSTで送信
+    // 取得したログをHTMLに整形して入れる処理
 }
