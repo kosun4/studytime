@@ -1,64 +1,131 @@
-:root {
-    --glass: rgba(255, 255, 255, 0.5);
-    --glass-heavy: rgba(255, 255, 255, 0.8);
-    --border: rgba(255, 255, 255, 0.6);
-    --accent: #007aff;
-    --text-main: #1d1d1f;
-    --text-sub: #86868b;
-    --bg-base: #f5f5f7;
+// ★デプロイ後のURLをここに貼り付けてください
+const API_URL = "YOUR_GAS_DEPLOY_URL";
+
+let startTime, timerInterval, elapsedTime = 0;
+
+// ページ切り替え
+async function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.dock-item').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('nav-' + id.replace('page-', '')).classList.add('active');
+    
+    if (id !== 'page-timer') await fetchAndProcessData();
 }
 
-body {
-    margin: 0; background: var(--bg-base);
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--text-main); height: 100vh; overflow: hidden;
+function formatTime(s) {
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const sc = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${sc}`;
 }
 
-/* 背景 */
-.glass-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-.circle { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.4; animation: float 15s infinite alternate; }
-.c1 { width: 300px; height: 300px; background: #a1c4fd; top: -50px; left: -50px; }
-.c2 { width: 400px; height: 400px; background: #ff9a9e; bottom: -50px; right: -50px; }
-@keyframes float { from { transform: translate(0,0); } to { transform: translate(40px, 40px); } }
-
-/* ページ */
-.page { display: none; padding: 40px 20px 120px; height: 100vh; overflow-y: auto; box-sizing: border-box; }
-.page.active { display: block; animation: fadeIn 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* タイマー */
-.timer-orb {
-    width: 260px; height: 260px; margin: 40px auto;
-    background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 50px; font-weight: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+function startTimer() {
+    if (timerInterval) return;
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        document.getElementById('timerDisplay').textContent = formatTime(Math.floor(elapsedTime / 1000));
+    }, 100);
 }
 
-/* 統計カード */
-.glass-card {
-    background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 15px;
-}
-.glass-card span { font-size: 12px; color: var(--text-sub); }
-.glass-card p { font-size: 32px; font-weight: 700; margin: 5px 0; color: var(--accent); }
+async function stopTimer() {
+    if (elapsedTime < 1000) return;
+    const finalTime = document.getElementById('timerDisplay').textContent;
+    
+    if (!confirm(`${finalTime} を記録しますか？`)) return;
 
-/* ボタン */
-.controls { display: flex; justify-content: center; gap: 15px; }
-.btn {
-    width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--border);
-    background: var(--glass-heavy); cursor: pointer; font-weight: 600; transition: 0.2s;
-}
-.btn:active { transform: scale(0.9); }
-.btn-start { color: #28cd41; }
-.btn-stop { color: #ff3b30; }
-.btn-del { border: none; background: rgba(255,59,48,0.1); color: #ff3b30; padding: 8px 12px; border-radius: 10px; font-size: 12px; cursor: pointer; }
+    // UIを一時停止
+    clearInterval(timerInterval);
+    timerInterval = null;
 
-/* ナビゲーション */
-.dock {
-    position: fixed; bottom: 25px; left: 20px; right: 20px; height: 60px;
-    background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-radius: 30px; display: flex; align-items: center; border: 1px solid var(--border);
+    try {
+        // 保存開始
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "add", duration: finalTime })
+        });
+        
+        // 成功したらリセット
+        elapsedTime = 0;
+        document.getElementById('timerDisplay').textContent = "00:00:00";
+        alert("保存完了しました！");
+    } catch (e) {
+        alert("保存に失敗しました。ネット接続を確認してください。");
+    }
 }
-.dock-item { flex: 1; border: none; background: none; color: var(--text-sub); font-weight: 600; cursor: pointer; }
-.dock-item.active { color: var(--accent); }
+
+function resetTimer() {
+    if(confirm("リセットしますか？")) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        elapsedTime = 0;
+        document.getElementById('timerDisplay').textContent = "00:00:00";
+    }
+}
+
+// データの取得と統計の算出
+async function fetchAndProcessData() {
+    const logList = document.getElementById('logList');
+    logList.innerHTML = "<p style='text-align:center; padding:20px; color:#86868b;'>読み込み中...</p>";
+    
+    try {
+        const response = await fetch(API_URL);
+        const logs = await response.json();
+        
+        let totalSec = 0, todaySec = 0, monthSec = 0;
+        const now = new Date();
+        
+        logList.innerHTML = "";
+        
+        // 新しい順に処理
+        logs.reverse().forEach(log => {
+            // 時間(HH:mm:ss)を秒に変換
+            const p = log.duration.split(':');
+            const sec = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
+            
+            const lDate = new Date(log.timestamp);
+            
+            // 統計計算
+            totalSec += sec;
+            if (lDate.toDateString() === now.toDateString()) todaySec += sec;
+            if (lDate.getMonth() === now.getMonth() && lDate.getFullYear() === now.getFullYear()) monthSec += sec;
+
+            // ログカード生成
+            const card = document.createElement('div');
+            card.className = 'glass-card log-item';
+            card.style.display = 'flex';
+            card.style.justifyContent = 'space-between';
+            card.style.alignItems = 'center';
+            card.innerHTML = `
+                <div>
+                    <small style="color:var(--text-sub); font-size:11px;">${lDate.toLocaleString()}</small>
+                    <p style="font-size:20px; font-weight:600; margin:0;">${log.duration}</p>
+                </div>
+                <button onclick="deleteLog('${log.id}')" class="btn-del">削除</button>
+            `;
+            logList.appendChild(card);
+        });
+
+        // 統計表示を更新
+        document.getElementById('statToday').textContent = formatTime(todaySec);
+        document.getElementById('statMonth').textContent = formatTime(monthSec);
+        document.getElementById('statTotal').textContent = formatTime(totalSec);
+
+    } catch (e) {
+        logList.innerHTML = "<p style='text-align:center; color:#ff3b30;'>エラーが発生しました</p>";
+    }
+}
+
+async function deleteLog(id) {
+    if(!confirm("削除しますか？")) return;
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "delete", id: id })
+        });
+        fetchAndProcessData();
+    } catch(e) {
+        alert("削除に失敗しました");
+    }
+}
