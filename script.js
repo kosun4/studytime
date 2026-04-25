@@ -23,29 +23,30 @@ async function stopTimer() {
     if (elapsedTime < 1000) return;
     const timeStr = document.getElementById('timerDisplay').textContent;
     
-    if (!confirm(`航海記録を保存しますか？\n時間: ${timeStr}`)) return;
+    if (!confirm(`記録を保存しますか？ : ${timeStr}`)) return;
 
     clearInterval(timerInterval);
     timerInterval = null;
 
+    // fetchの代わりに、最も原始的で確実な「フォーム送信」に近い形式で送る
     try {
-        // GASへ送信（最もエラーが出にくい構成）
-        fetch(API_URL, {
+        await fetch(API_URL, {
             method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({
-                action: "add",
-                duration: timeStr
-            })
+            mode: "no-cors", // Google側でエラーを出させない魔法
+            cache: "no-cache",
+            headers: { "Content-Type": "text/plain" }, // JSONではなくテキストとして送りつける
+            body: JSON.stringify({ action: "add", duration: timeStr })
         });
 
-        alert("星図への書き込み命令を送信しました！");
+        // 成功を信じてアラートを出す
+        alert("星図へ信号を送りました！反映をお待ちください。");
         elapsedTime = 0;
         document.getElementById('timerDisplay').textContent = "00:00:00";
     } catch (e) {
-        alert("送信失敗。ネット接続を確認してください。");
+        alert("送信に失敗しました");
     }
 }
+
 
 function resetTimer() {
     if(!confirm("リセットしますか？")) return;
