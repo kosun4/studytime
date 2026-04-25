@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>学習計測アプリ</title>
+    <title>Study Timer</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>学習計測</h1>
-        <div id="timerDisplay" class="timer">00:00:00</div>
-        
+    <div class="app-container">
+        <div class="stats-grid">
+            <div class="stat-card"><span>今日</span><b id="statToday">0h 0m</b></div>
+            <div class="stat-card"><span>今月</span><b id="statMonth">0h 0m</b></div>
+            <div class="stat-card"><span>合計</span><b id="statTotal">0h 0m</b></div>
+        </div>
+
+        <div class="timer-circle">
+            <div id="timerDisplay">00:00:00</div>
+        </div>
+
         <div class="controls">
-            <button id="startButton">開始</button>
-            <button id="stopButton">終了</button>
+            <button id="startButton" class="btn-main">開始</button>
+            <button id="stopButton" class="btn-main stop">終了</button>
+            <button id="resetButton" class="btn-sub">リセット</button>
         </div>
     </div>
     <script src="script.js"></script>
