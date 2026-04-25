@@ -1,31 +1,26 @@
-async function stopTimer() {
-    if (elapsedTime < 1000) return;
-    const timeStr = document.getElementById('timerDisplay').textContent;
+function doPost(e) { 
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheets()[0];
     
-    if (!confirm("保存しますか？")) return;
+    const data = JSON.parse(e.postData.contents);
+    Logger.log(data);
 
-    clearInterval(timerInterval);
-    timerInterval = null;
-
-    try {
-        const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                action: "add", 
-                duration: timeStr 
-            })
-        });
-
-        const text = await res.text();
-        console.log(text);
-
-        alert("送信成功");
-    } catch (err) {
-        console.error(err);
-        alert("送信失敗");
+    if (data.action === "add") {
+      sheet.appendRow([
+        new Date(), 
+        data.duration
+      ]);
     }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "ok" }))
+      .setMimeType(ContentService.MimeType.JSON);
 
-    elapsedTime = 0;
-    document.getElementById('timerDisplay').textContent = "00:00:00";
+  } catch (err) {
+    Logger.log(err);
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
