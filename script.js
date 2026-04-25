@@ -1,53 +1,107 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Stellar Focus</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="starry-sky">
-        <div class="stars"></div>
-        <div class="twinkle"></div>
-        <div class="shooting-star"></div>
-    </div>
+// 読み込みチェック
+window.onload = () => {
+    console.log("Stellar Focus JS Loaded.");
+    alert("システム起動：星空との同期を開始します"); 
+};
 
-    <main id="app">
-        <section id="page-timer" class="page active">
-            <div class="timer-container">
-                <div class="moon-timer">
-                    <div id="timerDisplay">00:00:00</div>
-                </div>
-            </div>
-            <div class="controls">
-                <button type="button" onclick="startTimer()" class="btn btn-start">点火</button>
-                <button type="button" onclick="resetTimer()" class="btn btn-reset">還送</button>
-                <button type="button" onclick="stopTimer()" class="btn btn-stop">着陸</button>
-            </div>
-        </section>
+const API_URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
 
-        <section id="page-stats" class="page">
-            <div class="page-header">天体観測記録</div>
-            <div class="stat-list">
-                <div class="star-card"><span>本日</span><p id="statToday">00:00:00</p></div>
-                <div class="star-card"><span>今月</span><p id="statMonth">00:00:00</p></div>
-                <div class="star-card"><span>累計</span><p id="statTotal">00:00:00</p></div>
-            </div>
-        </section>
+let startTime, timerInterval, elapsedTime = 0;
 
-        <section id="page-log" class="page">
-            <div class="page-header">星の軌跡</div>
-            <div id="logList"></div>
-        </section>
-    </main>
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const navId = 'nav-' + id.replace('page-', '');
+    if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
+    if (id !== 'page-timer') fetchAndProcessData();
+}
 
-    <nav class="starlight-nav">
-        <button type="button" onclick="showPage('page-timer')" class="nav-item active" id="nav-timer">観測</button>
-        <button type="button" onclick="showPage('page-stats')" class="nav-item" id="nav-stats">記録</button>
-        <button type="button" onclick="showPage('page-log')" class="nav-item" id="nav-log">軌跡</button>
-    </nav>
+function formatTime(s) {
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const sc = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${sc}`;
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+function startTimer() {
+    if (timerInterval) return;
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        document.getElementById('timerDisplay').textContent = formatTime(Math.floor(elapsedTime / 1000));
+    }, 100);
+}
+
+async function stopTimer() {
+    if (elapsedTime < 1000) return;
+    const finalTime = document.getElementById('timerDisplay').textContent;
+    if (!confirm("記録を星図に書き込みますか？")) return;
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    try {
+        // GAS送信
+        await fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "add", duration: finalTime })
+        });
+        
+        elapsedTime = 0;
+        document.getElementById('timerDisplay').textContent = "00:00:00";
+        alert("星の軌跡を記録しました。");
+    } catch (e) {
+        alert("通信失敗：星空に届きませんでした。");
+    }
+}
+
+function resetTimer() {
+    if(!confirm("計測をリセットしますか？")) return;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    elapsedTime = 0;
+    document.getElementById('timerDisplay').textContent = "00:00:00";
+}
+
+async function fetchAndProcessData() {
+    const logList = document.getElementById('logList');
+    logList.innerHTML = "観測中...";
+    try {
+        const response = await fetch(API_URL);
+        const logs = await response.json();
+        let totalSec = 0, todaySec = 0, monthSec = 0;
+        const now = new Date();
+        logList.innerHTML = "";
+        
+        [...logs].reverse().forEach(log => {
+            const p = log.duration.split(':');
+            const sec = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
+            const lDate = new Date(log.timestamp);
+            totalSec += sec;
+            if (lDate.toDateString() === now.toDateString()) todaySec += sec;
+            if (lDate.getMonth() === now.getMonth()) monthSec += sec;
+
+            const card = document.createElement('div');
+            card.className = 'star-card';
+            card.style.display = 'flex';
+            card.style.justifyContent = 'space-between';
+            card.innerHTML = `<div><small>${lDate.toLocaleString()}</small><p>${log.duration}</p></div>
+                             <button onclick="deleteLog('${log.id}')" class="btn-del">消去</button>`;
+            logList.appendChild(card);
+        });
+        document.getElementById('statToday').textContent = formatTime(todaySec);
+        document.getElementById('statMonth').textContent = formatTime(monthSec);
+        document.getElementById('statTotal').textContent = formatTime(totalSec);
+    } catch (e) {
+        logList.innerHTML = "データがありません。";
+    }
+}
+
+async function deleteLog(id) {
+    if(!confirm("消去しますか？")) return;
+    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "delete", id: id }) });
+    setTimeout(fetchAndProcessData, 1000);
+}
