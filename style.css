@@ -1,57 +1,79 @@
-const URL = "あなたのGASのURL"; // ★ここに新しいURLを貼り付け！
-
-async function fetchAndProcessData() {
-    const logList = document.getElementById('logList');
-    if(logList) logList.innerHTML = "同期中...";
-
-    try {
-        const response = await fetch(URL);
-        const rawLogs = await response.json();
-
-        let totalSec = 0, todaySec = 0, monthSec = 0;
-        const now = new Date();
-        const todayStr = now.toLocaleDateString();
-        const monthStr = now.getFullYear() + "/" + (now.getMonth() + 1);
-
-        if(logList) logList.innerHTML = "";
-
-        // 新しい順に表示
-        rawLogs.reverse().forEach(log => {
-            const lDate = new Date(log.timestamp);
-            const lDateStr = lDate.toLocaleDateString();
-            const lMonthStr = lDate.getFullYear() + "/" + (lDate.getMonth() + 1);
-            
-            // 時間を秒に変換して加算
-            const p = log.duration.split(':');
-            const sec = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
-            
-            totalSec += sec;
-            if (lDateStr === todayStr) todaySec += sec;
-            if (lMonthStr === monthStr) monthSeconds += sec; // ここが「今月合計」
-
-            // ログの表示
-            const div = document.createElement('div');
-            div.className = 'log-card';
-            div.innerHTML = `
-                <div><small>${lDate.toLocaleString()}</small><div>${log.duration}</div></div>
-                <button onclick="deleteLog('${log.id}')" class="del-btn">削除</button>`;
-            if(logList) logList.appendChild(div);
-        });
-
-        // 統計画面への反映
-        document.getElementById('statToday').textContent = formatTime(todaySec);
-        document.getElementById('statMonth').textContent = formatTime(monthSec); // 今月
-        document.getElementById('statTotal').textContent = formatTime(totalSec);
-
-    } catch (e) {
-        console.error("エラー:", e);
-    }
+:root {
+    --glass: rgba(255, 255, 255, 0.7);
+    --border: rgba(255, 255, 255, 0.5);
+    --blue: #0071e3;
+    --red: #ff3b30;
+    --gray: #86868b;
 }
 
-// 秒を 00:00:00 に戻す
-function formatTime(s) {
-    const h = Math.floor(s / 3600).toString().padStart(2, '0');
-    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
-    const sc = (s % 60).toString().padStart(2, '0');
-    return `${h}:${m}:${sc}`;
+body {
+    margin: 0; padding: 0; background: #f5f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    color: #1d1d1f; height: 100vh; overflow: hidden;
 }
+
+.bg-blur {
+    position: fixed; top: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(0,113,227,0.1) 0%, #ffffff 100%);
+    z-index: -1;
+}
+
+.page { display: none; padding: 40px 20px; text-align: center; height: 82vh; overflow-y: auto; }
+.page.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* ガラスタイマー（大きな円） */
+.glass-timer {
+    width: 280px; height: 280px; margin: 40px auto;
+    background: var(--glass);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--border); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+    font-size: 56px; font-weight: 200; font-variant-numeric: tabular-nums;
+}
+
+/* 3連ボタン */
+.glass-controls {
+    display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px;
+}
+
+.glass-btn {
+    width: 85px; height: 85px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--glass);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+.glass-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.9); }
+.glass-btn.primary { color: var(--blue); }
+.glass-btn.danger { color: var(--red); }
+.glass-btn.secondary { color: var(--gray); }
+
+/* 統計カード */
+.stat-card {
+    background: white; padding: 22px; border-radius: 24px; margin-bottom: 15px;
+    text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #eee;
+}
+.stat-card span { font-size: 13px; color: var(--gray); font-weight: 500; }
+.stat-card p { font-size: 32px; font-weight: 700; margin: 5px 0; color: var(--blue); }
+
+/* ログ */
+.log-card {
+    background: white; border-radius: 18px; padding: 18px; margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee;
+}
+.del-btn { color: var(--red); background: rgba(255,59,48,0.1); border: none; padding: 10px 15px; border-radius: 12px; font-weight: 600; }
+
+/* ナビ */
+.apple-nav {
+    position: fixed; bottom: 0; width: 100%; height: 85px;
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+    display: flex; justify-content: space-around; border-top: 1px solid #d2d2d7;
+}
+.nav-item { border: none; background: none; font-size: 12px; color: var(--gray); font-weight: 600; flex: 1; }
