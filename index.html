@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StudyFlow Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="smartphone-container">
+        
+        <section id="page-timer" class="page active">
+            <h2 class="page-title">学習計測</h2>
+            <div class="timer-container">
+                <div class="timer-circle">
+                    <div id="display">00:00:00</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="startStop">開始</button>
+                <button id="finish" class="finish-btn">終了</button>
+            </div>
+        </section>
+
+        <section id="page-log" class="page">
+            <h2 class="page-title">学習ログ</h2>
+            <div id="log-list" class="log-list"></div>
+        </section>
+
+        <section id="page-stats" class="page">
+            <h2 class="page-title">学習統計</h2>
+            <div class="stats-stack">
+                <div class="stat-card"><p>今日の学習</p><span id="stat-today">0s</span></div>
+                <div class="stat-card"><p>今月の学習</p><span id="stat-month">0s</span></div>
+                <div class="stat-card"><p>累計学習時間</p><span id="stat-total">0s</span></div>
+            </div>
+        </section>
+
+        <nav class="tab-bar">
+            <button class="tab-item active" onclick="showPage('page-timer', this)">計測</button>
+            <button class="tab-item" onclick="showPage('page-log', this)">ログ</button>
+            <button class="tab-item" onclick="showPage('page-stats', this)">統計</button>
+        </nav>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html
