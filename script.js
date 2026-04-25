@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw6bfRGcEQDGdCECKNHvRQUfUIaW_BM3cmB9OACaR1tfwxlMPLwsEOHaGYwbynHM6Enuw/exec";
 
 let startTime, timerInterval, elapsedTime = 0;
 
