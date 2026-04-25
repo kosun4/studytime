@@ -1,47 +1,50 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
+const WEB_APP_URL = "あなたのGASのURL";
 
-let startTime;
-let timerInterval;
-let elapsedTime = 0;
-
+let startTime, timerInterval, elapsedTime = 0;
 const timerDisplay = document.getElementById('timerDisplay');
-const startButton = document.getElementById('startButton');
-const stopButton = document.getElementById('stopButton');
+const startBtn = document.getElementById('startButton');
 
-// タイマー開始
 function startTimer() {
     startTime = Date.now() - elapsedTime;
     timerInterval = setInterval(() => {
         elapsedTime = Date.now() - startTime;
-        const s = Math.floor((elapsedTime / 1000) % 60).toString().padStart(2, '0');
-        const m = Math.floor((elapsedTime / (1000 * 60)) % 60).toString().padStart(2, '0');
-        const h = Math.floor((elapsedTime / (1000 * 60 * 60))).toString().padStart(2, '0');
-        timerDisplay.textContent = `${h}:${m}:${s}`;
+        updateDisplay(elapsedTime);
     }, 1000);
-    startButton.disabled = true;
+    startBtn.disabled = true;
 }
 
-// タイマー停止 ＆ スプレッドシートへ送信
+function updateDisplay(time) {
+    const s = Math.floor((time / 1000) % 60).toString().padStart(2, '0');
+    const m = Math.floor((time / (1000 * 60)) % 60).toString().padStart(2, '0');
+    const h = Math.floor((time / (1000 * 60 * 60))).toString().padStart(2, '0');
+    timerDisplay.textContent = `${h}:${m}:${s}`;
+}
+
 async function stopTimer() {
     clearInterval(timerInterval);
-    startButton.disabled = false;
     const durationText = timerDisplay.textContent;
-
-    // GASにデータを送る
-    try {
-        await fetch(WEB_APP_URL, {
-            method: "POST",
-            mode: "no-cors", // GAS連携の必須設定
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ duration: durationText })
-        });
-        alert("スプレッドシートに保存しました！");
-    } catch (e) {
-        console.error(e);
-        alert("エラーが発生しました");
-    }
+    
+    // データ送信
+    const response = await fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ duration: durationText })
+    });
+    
+    // リセット処理
+    resetTimer();
+    
+    // 統計の更新（GASから返ってきたデータを入れる）
+    // ※no-corsだとレスポンスが取れないため、今回は送信のみ。反映は次回リロード時か、fetch設定変更が必要
+    alert("保存してリセットしました！");
 }
 
-// ボタンにクリックイベントを登録
-startButton.addEventListener('click', startTimer);
-stopButton.addEventListener('click', stopTimer);
+function resetTimer() {
+    clearInterval(timerInterval);
+    elapsedTime = 0;
+    timerDisplay.textContent = "00:00:00";
+    startBtn.disabled = false;
+}
+
+document.getElementById('startButton').addEventListener('click', startTimer);
+document.getElementById('stopButton').addEventListener('click', stopTimer);
+document.getElementById('resetButton').addEventListener('click', resetTimer);
