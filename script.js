@@ -1,9 +1,7 @@
-// あなたのURLに書き換えてください
 const API_URL = "https://script.google.com/macros/s/AKfycby3pv5UxD6FwT3vv2g2HY_WRp8_QIYIp0ecVSC6U0fvHw0lDOJ8IPj_18P34DVCwdkc/exec";
 
 let startTime, timerInterval, elapsedTime = 0;
 
-// 時間の表示形式作成
 function formatTime(s) {
     const h = Math.floor(s / 3600).toString().padStart(2, '0');
     const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
@@ -11,7 +9,6 @@ function formatTime(s) {
     return `${h}:${m}:${sc}`;
 }
 
-// タイマー開始
 function startTimer() {
     if (timerInterval) return;
     startTime = Date.now() - elapsedTime;
@@ -21,95 +18,69 @@ function startTimer() {
     }, 100);
 }
 
-// 【重要】スプレッドシートへ自動書き込み
+// ここが自動書き込みの心臓部
 async function stopTimer() {
-    if (elapsedTime < 1000) return; // 1秒未満は無視
-    
+    if (elapsedTime < 1000) return;
     const timeStr = document.getElementById('timerDisplay').textContent;
-    if (!confirm(`航海を終了し、${timeStr} を記録しますか？`)) return;
+    
+    if (!confirm(`航海記録を保存しますか？\n時間: ${timeStr}`)) return;
 
     clearInterval(timerInterval);
     timerInterval = null;
 
     try {
-        // GASへ送信
-        await fetch(API_URL, {
+        // GASへ送信（最もエラーが出にくい構成）
+        fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", // セキュリティ制限回避
+            mode: "no-cors",
             body: JSON.stringify({
                 action: "add",
                 duration: timeStr
             })
         });
 
-        alert("星図に記録が刻まれました！");
+        alert("星図への書き込み命令を送信しました！");
         elapsedTime = 0;
         document.getElementById('timerDisplay').textContent = "00:00:00";
     } catch (e) {
-        alert("通信エラー：記録に失敗しました。");
+        alert("送信失敗。ネット接続を確認してください。");
     }
 }
 
-// リセット
 function resetTimer() {
-    if(!confirm("計測をリセットしますか？")) return;
+    if(!confirm("リセットしますか？")) return;
     clearInterval(timerInterval);
     timerInterval = null;
     elapsedTime = 0;
     document.getElementById('timerDisplay').textContent = "00:00:00";
 }
 
-// データの取得と反映
 async function fetchAndProcessData() {
     const logList = document.getElementById('logList');
-    logList.innerHTML = "天体観測中...";
+    logList.innerHTML = "データ通信中...";
     try {
         const res = await fetch(API_URL);
         const logs = await res.json();
-        let totalSec = 0, todaySec = 0;
-        const todayStr = new Date().toDateString();
+        let totalSec = 0;
         logList.innerHTML = "";
 
         [...logs].reverse().forEach(log => {
             const p = log.duration.split(':');
-            const s = parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
-            totalSec += s;
-            const logDate = new Date(log.timestamp);
-            if (logDate.toDateString() === todayStr) todaySec += s;
-
+            totalSec += parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
+            
             const card = document.createElement('div');
             card.className = 'star-card';
-            card.innerHTML = `
-                <div style="text-align:left">
-                    <small>${log.timestamp}</small>
-                    <p style="font-size:20px; color:white; margin:0;">${log.duration}</p>
-                </div>
-                <button onclick="deleteLog('${log.id}')" class="btn-del">消去</button>`;
+            card.innerHTML = `<small>${log.timestamp}</small><p style="font-size:20px; color:white;">${log.duration}</p>`;
             logList.appendChild(card);
         });
-
-        document.getElementById('statToday').textContent = formatTime(todaySec);
         document.getElementById('statTotal').textContent = formatTime(totalSec);
-        document.getElementById('statMonth').textContent = formatTime(totalSec);
     } catch (e) {
-        logList.innerHTML = "記録が見つかりません。";
+        logList.innerHTML = "まだ記録がありません。";
     }
 }
 
-// ページ切り替え
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     if (id !== 'page-timer') fetchAndProcessData();
-}
-
-// 削除処理
-async function deleteLog(id) {
-    if(!confirm("消去しますか？")) return;
-    await fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({ action: "delete", id: id })
-    });
-    setTimeout(fetchAndProcessData, 1000);
 }
