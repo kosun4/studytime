@@ -1,4 +1,4 @@
-const API_URL = "ここにGASのexec URL";
+const API_URL = "https://script.google.com/macros/s/AKfycbw6bfRGcEQDGdCECKNHvRQUfUIaW_BM3cmB9OACaR1tfwxlMPLwsEOHaGYwbynHM6Enuw/exec";
 
 let startTime, timerInterval, elapsedTime = 0;
 
