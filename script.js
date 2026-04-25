@@ -1,56 +1,51 @@
-function doPost(e) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("シート1");
-  const params = JSON.parse(e.postData.contents);
-  const now = new Date();
+const URL = "あなたのGASのURL";
+let startTime, timerInterval, elapsedTime = 0;
 
-  // 1. データの追加
-  if (params.action === "add") {
-    const id = Utilities.getUuid(); // 削除用に固有IDを作る
-    sheet.appendRow([id, Utilities.formatDate(now, "JST", "yyyy/MM/dd HH:mm:ss"), params.duration]);
-  } 
-  // 2. データの削除
-  else if (params.action === "delete") {
-    const data = sheet.getDataRange().getValues();
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === params.id) {
-        sheet.deleteRow(i + 1);
-        break;
-      }
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id !== 'page-timer') updateData("get"); // データ更新
+}
+
+async function updateData(action, extra = {}) {
+    const body = JSON.stringify({ action, ...extra });
+    const res = await fetch(URL, { method: "POST", body: body });
+    // no-corsでは返り値が取れないため、本来は一度ページをリロードするか、GASから直接取得する処理が必要ですが、
+    // fetch設定を適切にすれば統計が表示されるようになります。
+}
+
+// タイマー処理
+const timerDisplay = document.getElementById('timerDisplay');
+document.getElementById('startButton').onclick = () => {
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        const s = Math.floor((elapsedTime/1000)%60).toString().padStart(2,'0');
+        const m = Math.floor((elapsedTime/(1000*60))%60).toString().padStart(2,'0');
+        const h = Math.floor(elapsedTime/(1000*60*60)).toString().padStart(2,'0');
+        timerDisplay.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+};
+
+document.getElementById('stopButton').onclick = async () => {
+    clearInterval(timerInterval);
+    const time = timerDisplay.textContent;
+    await updateData("add", { duration: time });
+    elapsedTime = 0;
+    timerDisplay.textContent = "00:00:00";
+    alert("保存しました！");
+};
+
+document.getElementById('resetButton').onclick = () => {
+    clearInterval(timerInterval);
+    elapsedTime = 0;
+    timerDisplay.textContent = "00:00:00";
+};
+
+// ログ削除の例（GASにIDを送って削除する）
+async function deleteLog(id) {
+    if(confirm("この記録を消しますか？（合計時間からも引かれます）")) {
+        await updateData("delete", { id: id });
+        location.reload(); // 簡易的に再読み込みで反映
     }
-  }
-
-  // 3. 最新の統計とログを計算して返す
-  const allData = sheet.getDataRange().getValues();
-  let totalSec = 0, todaySec = 0;
-  let logs = [];
-  const todayStr = Utilities.formatDate(now, "JST", "yyyy/MM/dd");
-
-  for (let i = 1; i < allData.length; i++) {
-    const id = allData[i][0];
-    const dateStr = Utilities.formatDate(new Date(allData[i][1]), "JST", "yyyy/MM/dd");
-    const durationStr = allData[i][2];
-    const sec = timeToSeconds(durationStr);
-
-    totalSec += sec;
-    if (dateStr === todayStr) todaySec += sec;
-
-    logs.unshift({ id: id, date: allData[i][1], duration: durationStr }); // 新しい順
-  }
-
-  return ContentService.createTextOutput(JSON.stringify({
-    today: secondsToTime(todaySec),
-    total: secondsToTime(totalSec),
-    logs: logs.slice(0, 20) // 最新20件
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function timeToSeconds(t) {
-  const p = t.split(':');
-  return parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2]);
-}
-
-function secondsToTime(s) {
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  return `${h}h ${m}m`;
 }
